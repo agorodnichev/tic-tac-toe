@@ -1,0 +1,29 @@
+:root {
+    // Colors
+    --color-turquoise: hsl(178, 60%, 48%);
+    --color-turquoise-blue: hsl(178, 75%, 65%);
+    --color-saffron: hsl(39, 88%, 58%);
+    --color-golden-tainoi: hsl(39, 100%, 69%);
+    --color-mirage: hsl(202, 32%, 15%);
+    --color-te-papa-green: hsl(199, 35%, 19%);
+    --color-casper: hsl(198, 23%, 72%);
+    --color-casper-transparent: hsl(198, 23%, 72%, 0.05);
+    --color-botticelli: hsl(197, 33%, 89%);
+    --color-black: hsla(0, 0%, 0%, 1);
+
+    --color-background: var(--color-mirage);
+
+    // Typography
+    --fs-200: 0.875rem; //14
+    --fs-300: 1rem; //16
+    --fs-350: 1.25rem; //20
+    --fs-400: 1.5rem; //24
+    --fs-600: 2.5rem; //40
+
+    // Spacing
+    // --desktop-spacing: 30.625rem; //490
+
+    // Other
+    --br-small: 10px;
+    --br-large: 15px;
+}
