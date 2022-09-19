@@ -9,7 +9,7 @@ import { Router } from '../../services/router';
 export class GameBoardChangeEvent extends CustomEvent<GameState> {
     public static type = 'game-board-change';
     constructor(payload: GameState) {
-        super(GameBoardChangeEvent.type, {detail: payload});
+        super(GameBoardChangeEvent.type, {detail: payload, bubbles: true});
     }
 }
 

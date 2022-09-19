@@ -6,13 +6,11 @@ export enum PlayerType {
 export enum PlayerMark {
     x = 'X',
     o = 'O',
-    // none = 'none',
 }
 
 export enum PlayersList {
     PLAYER1 = 1,
     PLAYER2 = 2,
-    // NONE,
 }
 
 export enum DialogContentType {
@@ -50,9 +48,10 @@ export interface Winner {
 export interface GameState {
     score: Score,
     dialog: Dialog;
-    currentBoardMatrix: Array<string[]>; // 2 dimension array
-    player1Mark: PlayerMark; // only changes with new game
-    player2Mark: PlayerMark; // only changes with new game
+    currentBoardMatrix: Array<string[]>;
+    player1MarkSelectedOnNewGameScreen: PlayerMark;
+    player1Mark: PlayerMark;
+    player2Mark: PlayerMark;
     player1MarkOnGameStart: PlayerMark;
     player2MarkOnGameStart: PlayerMark;
     activeMark: PlayerMark;

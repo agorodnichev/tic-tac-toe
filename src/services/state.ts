@@ -71,6 +71,7 @@ const initialState: GameState = {
     activePlayer: PlayersList.PLAYER1,
     activePlayerOnRoundStart: PlayersList.PLAYER1,
     activePlayerOnGameStart: PlayersList.PLAYER1,
+    player1MarkSelectedOnNewGameScreen: PlayerMark.x,
     player1Mark: PlayerMark.x,
     player2Mark: PlayerMark.o,
     player1MarkOnGameStart: PlayerMark.x,

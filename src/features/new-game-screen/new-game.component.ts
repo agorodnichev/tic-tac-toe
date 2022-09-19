@@ -1,5 +1,6 @@
 import {HTMLElementBase} from '../../services/html-element-base';
-import {PlayerType, PlayerMark} from '../../model/model';
+import {PlayerType, PlayerMark, GameState} from '../../model/model';
+import { state } from '../../services/state';
 
 export interface NewGameEventPayload {
     playerOneSelection?: PlayerMark;
@@ -10,7 +11,7 @@ export class NewGameSelectionEvent extends CustomEvent<NewGameEventPayload>  {
     public static type = 'game-selection-change';
     
     constructor(payload: NewGameEventPayload)  {
-        super(NewGameSelectionEvent.type, {detail: payload});
+        super(NewGameSelectionEvent.type, {detail: payload, bubbles: true});
     }
 }
 
@@ -29,8 +30,12 @@ export class NewGameElement extends HTMLElementBase {
     // local state variables
     private currentPlayerOnePick = PlayerMark.o;
 
+    private state: GameState;
+
     constructor() {
         super({templateIdSelector: 'new-game-template'});
+        this.state = state.store;
+        // this.currentPlayerOnePick = this.state.player1MarkOnGameStart
     }
 
     // HOOKS
@@ -39,11 +44,11 @@ export class NewGameElement extends HTMLElementBase {
         this.defineElements();
         this.setDefaultActiveMark();
         this.setListeners();
-    }
 
-    // disconnectedCallback() {
-    //     console.log('were disconnected');
-    // }
+        // somewhere here reset state!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // otherwise if navigate through the browser, it will save any state
+
+    }
 
     // INITIALIZATION METHODS
     private defineElements() {
