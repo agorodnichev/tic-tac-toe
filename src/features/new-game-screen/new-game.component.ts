@@ -28,14 +28,14 @@ export class NewGameElement extends HTMLElementBase {
     private playerOoption?: HTMLDivElement;
 
     // local state variables
-    private currentPlayerOnePick = PlayerMark.o;
+    private currentPlayerOnePick;
 
     private state: GameState;
 
     constructor() {
         super({templateIdSelector: 'new-game-template'});
         this.state = state.store;
-        // this.currentPlayerOnePick = this.state.player1MarkOnGameStart
+        this.currentPlayerOnePick = this.state.player1MarkSelectedOnNewGameScreen;
     }
 
     // HOOKS
@@ -44,10 +44,6 @@ export class NewGameElement extends HTMLElementBase {
         this.defineElements();
         this.setDefaultActiveMark();
         this.setListeners();
-
-        // somewhere here reset state!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // otherwise if navigate through the browser, it will save any state
-
     }
 
     // INITIALIZATION METHODS

@@ -1,5 +1,5 @@
-import {HTMLElementBase} from '../../services/html-element-base';
-import {Components, GameState, GameStatus, PlayerMark, PlayersList, Winner} from '../../model/model';
+import { HTMLElementBase } from '../../services/html-element-base';
+import { Components, GameState, GameStatus, PlayerMark, PlayersList, Winner } from '../../model/model';
 import { Renderer } from './renderer';
 import { defineWinner } from '../../services/define-winner';
 import { Modal, ModalType } from '../modal-window/modal';
@@ -32,10 +32,35 @@ export class GameBoardElement extends HTMLElementBase {
     private renderer: Renderer;
     private modal: Modal;
 
+    private preProcessingActions = {
+        winnerStateNextRoundClick: [
+            this.resetMatrix,
+            this.resetWinner,
+            this.resetGameStatus,
+            this.changeActivePlayerParameters,
+        ],
+        tieStateNextRoundClick: [
+            this.resetMatrix,
+            this.resetGameStatus,
+            this.changeActivePlayerParameters,
+        ],
+        restartStateActions: [
+            this.resetMatrix,
+            this.resetGameStatus,
+            this.resetScore,
+            this.resetActiveMark,
+            this.restoreActivePlayerOnTheBeginningOfTheGame,
+            this.restoreActivePlayerOnRounStartOnTheBeginningOfTheGame,
+            this.restorePlayersMarksOnTheBeginningOfTheGame,
+        ],
+    }
+
     constructor() {
         super({templateIdSelector: 'game-board-template'});
         this.state = state.store;
     }
+
+
 
     connectedCallback() {
         super.connectedCallback();
@@ -61,8 +86,16 @@ export class GameBoardElement extends HTMLElementBase {
                 oOutlineIconTemplate: this.oOutlineIconTemplate,
             }
         );
-
+        this.restoreModalWindow();
         this.renderer.render();
+    }
+
+    private restoreModalWindow() {
+        if (this.state.gameStatus === GameStatus.HAS_WINNER) {
+            this.openModalByStatus(GameStatus.HAS_WINNER);
+        } else if (this.state.gameStatus === GameStatus.HAS_TIE) {
+            this.openModalByStatus(GameStatus.HAS_TIE);
+        }
     }
 
     private defineUiElements() {
@@ -76,6 +109,12 @@ export class GameBoardElement extends HTMLElementBase {
         this.oIconTemplate = document.getElementById('o-icon-template') as HTMLTemplateElement;
         this.xOutlineIconTemplate = document.getElementById('x-outline-icon-template') as HTMLTemplateElement;
         this.oOutlineIconTemplate = document.getElementById('o-outline-icon-template') as HTMLTemplateElement;
+    }
+
+    private preProcessingStepsRunner(stepList: Array<() => void>) {
+        for (const stepFunction of stepList) {
+            stepFunction.call(this);
+        }
     }
 
     private setListeners() {
@@ -103,34 +142,13 @@ export class GameBoardElement extends HTMLElementBase {
                 this.updateGameStatus(GameStatus.HAS_WINNER);
                 this.updateWinner(winner);
                 this.updateScore(this.state.activePlayer);
-                this.modal.open(ModalType.ROUND_ENDS_NATURALY).subscribe(isNextRoundButtonWasClicked => {
-                    if (isNextRoundButtonWasClicked) {
-                        this.resetMatrix();
-                        this.resetWinner();
-                        this.resetGameStatus()
-                        this.changeActivePlayerParameters();
-                        this.dispatchEvent(new GameBoardChangeEvent(this.state));
-                        this.renderer.render();
-                    } else {
-                        Router.router.navigateTo(Components.NEW_GAME);
-                    }
-                });
+                this.openModalByStatus(GameStatus.HAS_WINNER);
             } else if (this.areAllBoardElementAreasSet(this.state.currentBoardMatrix)) {
                 // if no winner but all the fields are already filled either with X or O
                 // then it's a TIE situation
                 this.updateGameStatus(GameStatus.HAS_TIE);
                 this.updateScore();
-                this.modal.open(ModalType.ROUND_ENDS_NATURALY).subscribe(isNextRoundButtonWasClicked => {
-                    if (isNextRoundButtonWasClicked) {
-                        this.resetMatrix();
-                        this.resetGameStatus();
-                        this.changeActivePlayerParameters();
-                        this.dispatchEvent(new GameBoardChangeEvent(this.state));
-                        this.renderer.render();
-                    } else {
-                        Router.router.navigateTo(Components.NEW_GAME);
-                    }
-                });
+                this.openModalByStatus(GameStatus.HAS_TIE);
             } else {
                 this.toggleActivePlayer();
                 this.toggleActiveMark();
@@ -145,18 +163,36 @@ export class GameBoardElement extends HTMLElementBase {
             event.preventDefault();
             this.modal.open(ModalType.RESTART).subscribe(isRestartButtonWasClicked => {
                 if (isRestartButtonWasClicked) {
-                    this.resetMatrix();
-                    this.resetGameStatus();
-                    this.resetScore();
-                    this.resetActiveMark();
-                    this.restoreActivePlayerOnTheBeginningOfTheGame();
-                    this.restoreActivePlayerOnRounStartOnTheBeginningOfTheGame();
-                    this.restorePlayersMarksOnTheBeginningOfTheGame();
+                    this.preProcessingStepsRunner(this.preProcessingActions.restartStateActions);
                     this.dispatchEvent(new GameBoardChangeEvent(this.state));
                     this.renderer.render();
                 }
             });
         });
+    }
+
+    private openModalByStatus(status: GameStatus) {
+        if (status === GameStatus.HAS_TIE) {
+            this.modal.open(ModalType.ROUND_ENDS_NATURALY).subscribe(isNextRoundButtonWasClicked => {
+                if (isNextRoundButtonWasClicked) {
+                    this.preProcessingStepsRunner(this.preProcessingActions.tieStateNextRoundClick);
+                    this.dispatchEvent(new GameBoardChangeEvent(this.state));
+                    this.renderer.render();
+                } else {
+                    Router.router.navigateTo(Components.NEW_GAME);
+                }
+            });
+        } else if (status === GameStatus.HAS_WINNER) {
+            this.modal.open(ModalType.ROUND_ENDS_NATURALY).subscribe(isNextRoundButtonWasClicked => {
+                if (isNextRoundButtonWasClicked) {
+                    this.preProcessingStepsRunner(this.preProcessingActions.winnerStateNextRoundClick);
+                    this.dispatchEvent(new GameBoardChangeEvent(this.state));
+                    this.renderer.render();
+                } else {
+                    Router.router.navigateTo(Components.NEW_GAME);
+                }
+            });
+        }
     }
 
     private fillElementInTheMatrix(itemPosition: number) {

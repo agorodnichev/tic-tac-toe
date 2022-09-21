@@ -4,10 +4,16 @@ import { Route, Router } from "../services/router";
 import { Components, GameState, GameStatus, PlayerMark, PlayersList, PlayerType } from "../model/model";
 import { NewGameSelectionEvent } from "./new-game-screen/new-game.component";
 import { state } from '../services/state';
+import { saveData, getData } from "../services/browser-storage";
 
 export function bootstrap() {
     
     const container = document.body.querySelector('.app-container');
+
+    const sessionData = getData();
+    if (sessionData) {
+        state.setStore(sessionData);
+    }
 
     const routes: Route[] = [
         { path: '', redirectTo: Components.GAME_BOARD },
@@ -17,6 +23,10 @@ export function bootstrap() {
 
     const router = new Router(routes, container as HTMLElement);
 
+    container.addEventListener(GameBoardChangeEvent.type, (event: GameBoardChangeEvent) => {
+        state.setStore(event.detail);
+        saveData(event.detail);
+    });
     
 
     container.addEventListener(NewGameSelectionEvent.type, (event: NewGameSelectionEvent) => {
@@ -36,12 +46,25 @@ export function bootstrap() {
             storeUpdateData.activePlayerOnGameStart = storeUpdateData.activePlayer;
             storeUpdateData.gameStatus = GameStatus.IN_PROGRESS;
             storeUpdateData.winner = undefined;
+            storeUpdateData.score = {
+                player1Score: 0,
+                player2Score: 0,
+                ties: 0,
+            };
+            storeUpdateData.currentBoardMatrix = [
+                [null, null, null],
+                [null, null, null],
+                [null, null, null],
+            ];
 
             state.setStore(storeUpdateData);
+            saveData(storeUpdateData);
 
             router.navigateTo(Components.GAME_BOARD);
             return;
         }
-        state.setStore({player1MarkSelectedOnNewGameScreen: userSelectionData.playerOneSelection})
+        const updatedData = {player1MarkSelectedOnNewGameScreen: userSelectionData.playerOneSelection};
+        state.setStore(updatedData);
+        saveData(updatedData);
     });
 }
