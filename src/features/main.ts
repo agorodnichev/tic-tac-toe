@@ -1,10 +1,12 @@
 import { NewGameElement } from "./new-game-screen/new-game.component";
 import { GameBoardChangeEvent, GameBoardElement } from "./game-board-screen/game-board.component";
 import { Route, Router } from "../services/router";
-import { Components, GameState, GameStatus, PlayerMark, PlayersList, PlayerType } from "../model/model";
+import { Components, GameState, GameStatus, PlayerMark, PlayersList } from "../model/model";
 import { NewGameSelectionEvent } from "./new-game-screen/new-game.component";
 import { state } from '../services/state';
 import { saveData, getData } from "../services/browser-storage";
+import { setConfig, BreakpointIds } from "../services/resizer";
+
 
 export function bootstrap() {
     
@@ -22,7 +24,7 @@ export function bootstrap() {
     ];
 
     const router = new Router(routes, container as HTMLElement);
-
+    setResizer();
     container.addEventListener(GameBoardChangeEvent.type, (event: GameBoardChangeEvent) => {
         state.setStore(event.detail);
         saveData(event.detail);
@@ -67,4 +69,87 @@ export function bootstrap() {
         state.setStore(updatedData);
         saveData(updatedData);
     });
+}
+
+
+function setResizer() {
+    setConfig([
+        {
+            id: BreakpointIds.MOBILE,
+            uiReflection: [
+                {
+                    element: getLiveBoardElements,
+                    properties: [
+                        {propertyName: 'width', propertyValue: '40px'},
+                        {propertyName: 'height', propertyValue: '40px'},
+                    ]
+                },
+                {
+                    element: getIconSvgsWithinTemplate,
+                    properties: [
+                        {propertyName: 'width', propertyValue: '40px'},
+                        {propertyName: 'height', propertyValue: '40px'},
+                    ]
+                },
+                {
+                    element: getLiveModalWindowIcon,
+                    properties: [
+                        {propertyName: 'width', propertyValue: '30px'},
+                        {propertyName: 'height', propertyValue: '30px'},
+                    ]
+                },
+            ]
+        },
+        {
+            id: BreakpointIds.DEFAULT,
+            uiReflection: [
+                {
+                    element: getLiveBoardElements,
+                    properties: [
+                        {propertyName: 'width', propertyValue: '66px'},
+                        {propertyName: 'height', propertyValue: '66px'},
+                    ]
+                },
+                {
+                    element: getIconSvgsWithinTemplate,
+                    properties: [
+                        {propertyName: 'width', propertyValue: '66px'},
+                        {propertyName: 'height', propertyValue: '66px'},
+                    ]
+                },
+                {
+                    element: getLiveModalWindowIcon,
+                    properties: [
+                        {propertyName: 'width', propertyValue: '66px'},
+                        {propertyName: 'height', propertyValue: '66px'},
+                    ]
+                },
+            ]
+        },
+    ]);
+}
+
+function getLiveModalWindowIcon(): HTMLCollection {
+    const modalBody = document.querySelector('.modal__body') as HTMLDivElement;
+    if (!modalBody) {
+        return;
+    }
+    return modalBody.getElementsByTagName('svg');
+}
+
+function getLiveBoardElements(): HTMLCollection {
+    const boardList = document.querySelector('.game-board-items');
+    if (!boardList) {
+        return;
+    }
+    return boardList.getElementsByTagName('svg');
+}
+
+function getIconSvgsWithinTemplate(): Array<SVGElement> {
+    return [
+        (document.getElementById('x-icon-template') as HTMLTemplateElement).content.firstChild as SVGElement,
+        (document.getElementById('o-icon-template') as HTMLTemplateElement).content.firstChild as SVGElement,
+        (document.getElementById('x-outline-icon-template') as HTMLTemplateElement).content.firstChild as SVGElement,
+        (document.getElementById('o-outline-icon-template') as HTMLTemplateElement).content.firstChild as SVGElement,
+    ];
 }

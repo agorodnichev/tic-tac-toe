@@ -13,6 +13,8 @@ interface ScoreCardElements {
 interface AdditionalElements extends ScoreCardElements {
     turnXsvg?: SVGAElement;
     turnOsvg?: SVGAElement;
+    liveBoardSvg?: HTMLCollectionOf<SVGSVGElement>;
+    iconBoardTemplates?: NodeListOf<HTMLTemplateElement>;
 }
 
 interface Templates {
@@ -34,12 +36,16 @@ export class Renderer implements IRenderer{
     state: GameState;
     elements: GameBoardElements;
 
+    // private mediaMobile = window.matchMedia("(max-width: 40em)");
 
     constructor(state: GameState, elements: GameBoardElements) {
         this.state = state;
         this.elements = elements;
 
         this.defineAdditionalElements();
+        // this.mediaMobile.addEventListener('change', event => {
+        //     this.resizeItemsBasedOnMediaQuery(event.matches);
+        // });
     }
 
     render() {
@@ -48,15 +54,32 @@ export class Renderer implements IRenderer{
         this.renderScoreInfo(); // should be rendered only once per game
         this.renderBoard();
         this.highLightWinnerPosition();
+        // this.resizeItemsBasedOnMediaQuery(this.mediaMobile.matches);
     }
 
-    private renderBoard(clearBoard?: boolean) {
-        // if (clearBoard) {
+    // private resizeItemsBasedOnMediaQuery(isMobile: boolean) {
+    //     this.resizeBoardIcons(isMobile);
+    //     this.resizeIconTemplates(isMobile);
+    // }
 
-        // }
+    // private resizeBoardIcons(isMobile: boolean) {
+    //     for (const svg of this.elements.liveBoardSvg) {
+    //         svg.setAttribute("width", `${isMobile ? "40px" : "66px"}`);
+    //         svg.setAttribute("height", `${isMobile ? "40px" : "66px"}`);
+    //     }
+    // }
+
+    // private resizeIconTemplates(isMobile: boolean) {
+    //     for (const template of this.elements.iconBoardTemplates) {
+    //         template.setAttribute("width", `${isMobile ? "40px" : "66px"}`);
+    //         template.setAttribute("height", `${isMobile ? "40px" : "66px"}`);
+    //     }
+    // }
+
+    private renderBoard() {
         const board = this.state.currentBoardMatrix;
         const liElements = this.elements.gameBoardItems.querySelectorAll('.board-item');
-        for (let row = 0; row < board.length; row ++) {
+        for (let row = 0; row < board.length; row++) {
             for (let col = 0; col < board[row].length; col++) {
                 const boardValue = board[row][col];
                 const item = liElements.item(row * 3 + col) as HTMLLIElement;
@@ -186,12 +209,17 @@ export class Renderer implements IRenderer{
         this.elements.oScoreElement = this.elements.oScoreCardElement.querySelector('.score');
         this.elements.oPlayerTypeTextElement = this.elements.oScoreCardElement.querySelector('.score-description > span');
         this.elements.tiesScoreElement = this.elements.boardFooter.querySelector('.score-ties > .score') as HTMLDivElement;
+        this.elements.liveBoardSvg = this.elements.gameBoardItems.getElementsByTagName('svg');
+        this.elements.iconBoardTemplates = document.querySelectorAll('.board-icon');
     }
 
     private getPlayerImage(mark: PlayerMark): SVGAElement {
+        let playerSvg: SVGAElement;
         if (mark === PlayerMark.x) {
-            return this.elements.xIconTemplate.content.cloneNode(true) as SVGAElement;
+            playerSvg = this.elements.xIconTemplate.content.cloneNode(true).firstChild as SVGAElement;
+        } else {
+            playerSvg = this.elements.oIconTemplate.content.cloneNode(true).firstChild as SVGAElement;
         }
-        return this.elements.oIconTemplate.content.cloneNode(true) as SVGAElement;
+        return playerSvg;
     }
 }

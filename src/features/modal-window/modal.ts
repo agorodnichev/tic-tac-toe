@@ -1,6 +1,6 @@
 import { filter, Observable, Subject, take } from "rxjs";
 import { GameState, PlayerMark, PlayersList, PlayerType } from '../../model/model';
-
+import { state } from "../../services/state";
 
 export enum ModalType {
     RESTART,
@@ -23,12 +23,9 @@ interface ModalElements {
 
 export class Modal {
     
-    private static modalSingelton: Modal;
-    
     private modalCloseObserver$ = new Subject<boolean>();
     private modalCloseObserver = this.modalCloseObserver$.asObservable();
 
-    private state: GameState;
     private iconTemplates: IconTemplates;
 
     // Elements
@@ -38,13 +35,8 @@ export class Modal {
     private modalButtons: HTMLDivElement;
     private buttonCancel: HTMLButtonElement;
     private buttonAccept: HTMLButtonElement;
-    
-    constructor(state: GameState, icons: IconTemplates) {
-        if (Modal.modalSingelton) {
-            return Modal.modalSingelton;
-        }
-        Modal.modalSingelton = this;
-        this.state = state;
+
+    constructor(icons: IconTemplates) {
         this.iconTemplates = icons;
         this.saveElementsToInstanceVariables(createModalDialogElements());
         this.addModalEventListeners();
@@ -60,7 +52,7 @@ export class Modal {
                 this.setRestartUI();
                 break;
             case ModalType.ROUND_ENDS_NATURALY:
-                if (this.state.winner) {
+                if (state.store.winner) {
                     this.setWinnerUI()
                     break;
                 }
@@ -69,12 +61,15 @@ export class Modal {
             default:
                 throw new Error(`There is no modal type = ${type}`);
         }
-        // this.modal.close('accept');
         this.modal.showModal();
         return this.modalCloseObserver.pipe(
             filter((close: boolean) => close !== undefined), 
             take(1)
         );
+    }
+
+    destroy() {
+        this.modal.remove();
     }
 
     private saveElementsToInstanceVariables(elements: ModalElements) {
@@ -95,12 +90,6 @@ export class Modal {
         this.modal.addEventListener('cancel', event => {
             event.preventDefault();
         });
-
-        // console.log((event.target as HTMLDialogElement).returnValue);
-        // this.modal.addEventListener('close', event => {
-        //     this.modalCloseObserver$.next(true);
-        //     this.modal.close();
-        //   });
 
         this.buttonCancel.addEventListener('click', () => {
             this.modalCloseObserver$.next(false);
@@ -123,9 +112,9 @@ export class Modal {
         const modalBodyContent = document.createDocumentFragment();
 
         modalBodyContent.appendChild(
-            this.state.activeMark === PlayerMark.x ?
-                this.iconTemplates.xIconTemplate.content.cloneNode(true) :
-                this.iconTemplates.oIconTemplate.content.cloneNode(true)
+            state.store.activeMark === PlayerMark.x ?
+                this.iconTemplates.xIconTemplate.content.firstChild.cloneNode(true) :
+                this.iconTemplates.oIconTemplate.content.firstChild.cloneNode(true)
         );
         modalBodyContent.appendChild(
             document.createTextNode('TAKES THE ROUND')
@@ -136,13 +125,13 @@ export class Modal {
 
         this.modalBody.appendChild(modalBodyContent);
         // if opponent is player
-        if (this.state.player2Type === PlayerType.player) {
-            this.modalTitle.textContent = `PLAYER ${this.state.activePlayer} WINS!`;
+        if (state.store.player2Type === PlayerType.player) {
+            this.modalTitle.textContent = `PLAYER ${state.store.activePlayer} WINS!`;
             return;
         }
         // otherwise cpu is opponent
         this.modalTitle.textContent =
-            this.state.activePlayer === PlayersList.PLAYER1 ?
+            state.store.activePlayer === PlayersList.PLAYER1 ?
                 'YOU WON' :
                 'OH NO, YOU LOST';
     }

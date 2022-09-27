@@ -60,14 +60,12 @@ export class GameBoardElement extends HTMLElementBase {
         this.state = state.store;
     }
 
-
-
     connectedCallback() {
         super.connectedCallback();
         this.defineUiElements();
         this.setListeners();
 
-        this.modal = new Modal(this.state, {
+        this.modal = new Modal({
             xIconTemplate: this.xIconTemplate,
             oIconTemplate: this.oIconTemplate,
         });
@@ -88,6 +86,10 @@ export class GameBoardElement extends HTMLElementBase {
         );
         this.restoreModalWindow();
         this.renderer.render();
+    }
+
+    disconnectedCallback() {
+        this.modal.destroy();
     }
 
     private restoreModalWindow() {
@@ -142,12 +144,14 @@ export class GameBoardElement extends HTMLElementBase {
                 this.updateGameStatus(GameStatus.HAS_WINNER);
                 this.updateWinner(winner);
                 this.updateScore(this.state.activePlayer);
+                this.dispatchEvent(new GameBoardChangeEvent(this.state));
                 this.openModalByStatus(GameStatus.HAS_WINNER);
             } else if (this.areAllBoardElementAreasSet(this.state.currentBoardMatrix)) {
                 // if no winner but all the fields are already filled either with X or O
                 // then it's a TIE situation
                 this.updateGameStatus(GameStatus.HAS_TIE);
                 this.updateScore();
+                this.dispatchEvent(new GameBoardChangeEvent(this.state));
                 this.openModalByStatus(GameStatus.HAS_TIE);
             } else {
                 this.toggleActivePlayer();
