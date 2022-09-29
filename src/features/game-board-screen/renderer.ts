@@ -1,4 +1,4 @@
-import { GameState, GameStatus, IRenderer, PlayerMark, PlayersList, PlayerType } from "../../model/model";
+import { GameState, GameStatus, IRenderer, PlayerMark, PlayerType } from "../../model/model";
 
 interface ScoreCardElements {
     xScoreCardElement?: HTMLDivElement;
@@ -36,16 +36,11 @@ export class Renderer implements IRenderer{
     state: GameState;
     elements: GameBoardElements;
 
-    // private mediaMobile = window.matchMedia("(max-width: 40em)");
-
     constructor(state: GameState, elements: GameBoardElements) {
         this.state = state;
         this.elements = elements;
 
         this.defineAdditionalElements();
-        // this.mediaMobile.addEventListener('change', event => {
-        //     this.resizeItemsBasedOnMediaQuery(event.matches);
-        // });
     }
 
     render() {
@@ -54,27 +49,7 @@ export class Renderer implements IRenderer{
         this.renderScoreInfo(); // should be rendered only once per game
         this.renderBoard();
         this.highLightWinnerPosition();
-        // this.resizeItemsBasedOnMediaQuery(this.mediaMobile.matches);
     }
-
-    // private resizeItemsBasedOnMediaQuery(isMobile: boolean) {
-    //     this.resizeBoardIcons(isMobile);
-    //     this.resizeIconTemplates(isMobile);
-    // }
-
-    // private resizeBoardIcons(isMobile: boolean) {
-    //     for (const svg of this.elements.liveBoardSvg) {
-    //         svg.setAttribute("width", `${isMobile ? "40px" : "66px"}`);
-    //         svg.setAttribute("height", `${isMobile ? "40px" : "66px"}`);
-    //     }
-    // }
-
-    // private resizeIconTemplates(isMobile: boolean) {
-    //     for (const template of this.elements.iconBoardTemplates) {
-    //         template.setAttribute("width", `${isMobile ? "40px" : "66px"}`);
-    //         template.setAttribute("height", `${isMobile ? "40px" : "66px"}`);
-    //     }
-    // }
 
     private renderBoard() {
         const board = this.state.currentBoardMatrix;

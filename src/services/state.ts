@@ -37,7 +37,6 @@ class StoreBase<T> {
             map((store: T) => {
                 return mapFn(store)
             }),
-            // distinctUntilChanged(),
         );
     }
 
@@ -79,7 +78,7 @@ const initialState: GameState = {
     player1MarkOnGameStart: PlayerMark.x,
     player2MarkOnGameStart: PlayerMark.o,
     activeMark: PlayerMark.x,
-    player2Type: PlayerType.player,
+    player2Type: PlayerType.cpu,
     winner: undefined,
     gameStatus: GameStatus.IN_PROGRESS,
 }
