@@ -1,10 +1,12 @@
 import { HTMLElementBase } from '../../services/html-element-base';
-import { Components, GameState, GameStatus, PlayerMark, PlayersList, Winner } from '../../model/model';
+import { Components, GameState, GameStatus, PlayerMark, PlayersList, PlayerType, Winner } from '../../model/model';
 import { Renderer } from './renderer';
 import { defineWinner } from '../../services/define-winner';
 import { Modal, ModalType } from '../modal-window/modal';
-import { state } from '../../services/state';
+import { state as sharedState } from '../../services/state';
 import { Router } from '../../services/router';
+import { getNextStep } from '../../services/minmax';
+import { debounce, distinctUntilChanged, filter, merge, Subject, Subscription, tap, throttle } from 'rxjs';
 
 export class GameBoardChangeEvent extends CustomEvent<GameState> {
     public static type = 'game-board-change';
@@ -14,6 +16,10 @@ export class GameBoardChangeEvent extends CustomEvent<GameState> {
 }
 
 export class GameBoardElement extends HTMLElementBase {
+
+    private subscritions = new Subscription();
+    private readonly newGameStarted$ = new Subject<boolean>;
+    private readonly newGameStarted = this.newGameStarted$.asObservable();
 
     // View variables
     private gameBoardItems?: HTMLUListElement;
@@ -57,7 +63,7 @@ export class GameBoardElement extends HTMLElementBase {
 
     constructor() {
         super({templateIdSelector: 'game-board-template'});
-        this.state = state.store;
+        this.state = sharedState.store;
     }
 
     connectedCallback() {
@@ -86,10 +92,15 @@ export class GameBoardElement extends HTMLElementBase {
         );
         this.restoreModalWindow();
         this.renderer.render();
+        if (this.state.player2Type === PlayerType.cpu) {
+            this.setCpuObserver();
+        }
+        this.newGameStarted$.next(true);
     }
 
     disconnectedCallback() {
         this.modal.destroy();
+        this.subscritions.unsubscribe();
     }
 
     private restoreModalWindow() {
@@ -119,6 +130,46 @@ export class GameBoardElement extends HTMLElementBase {
         }
     }
 
+    private cpuTurn() {
+        this.gameBoardItems.style.pointerEvents = 'none';
+        const nextMoveCell = getNextStep(this.state.currentBoardMatrix, this.state.activeMark === PlayerMark.x);
+        const cellElement = this.getCellElementByMatrixPosition(nextMoveCell);
+        setTimeout(() => {
+            cellElement.click();
+            this.gameBoardItems.style.pointerEvents = 'initial';
+        }, 500);
+
+    }
+
+    private getCellElementByMatrixPosition(position: {row: number, column: number}): HTMLElement {
+        const flatPosition = position.row * 3 + position.column + 1;
+        return this.gameBoardItems.querySelector(`[data-item-number='${flatPosition}']`);
+    }
+
+
+    /**
+     * 1. New game just started
+     * 2. Player is CPU
+     *   -- this condition matches all games starting
+     * 
+     */
+
+    private setCpuObserver() {
+        if (this.state.player2Type !== PlayerType.cpu) {
+            throw new Error('AI should be applied only for cpu player');
+        }
+        this.subscritions.add(
+            sharedState.select(store => store.activePlayer).pipe(
+                filter((player: PlayersList) => player === PlayersList.PLAYER2),
+                filter(() => this.state.gameStatus === GameStatus.IN_PROGRESS),
+                tap(() => {
+                    this.cpuTurn();
+                })
+            ).subscribe()
+        );
+        
+    }
+
     private setListeners() {
         this.gameBoardItems.addEventListener('click', (event: MouseEvent) => {
 
@@ -144,6 +195,7 @@ export class GameBoardElement extends HTMLElementBase {
                 this.updateGameStatus(GameStatus.HAS_WINNER);
                 this.updateWinner(winner);
                 this.updateScore(this.state.activePlayer);
+                this.toggleActivePlayer();
                 this.dispatchEvent(new GameBoardChangeEvent(this.state));
                 this.openModalByStatus(GameStatus.HAS_WINNER);
             } else if (this.areAllBoardElementAreasSet(this.state.currentBoardMatrix)) {
@@ -151,15 +203,14 @@ export class GameBoardElement extends HTMLElementBase {
                 // then it's a TIE situation
                 this.updateGameStatus(GameStatus.HAS_TIE);
                 this.updateScore();
+                this.toggleActivePlayer();
                 this.dispatchEvent(new GameBoardChangeEvent(this.state));
                 this.openModalByStatus(GameStatus.HAS_TIE);
             } else {
                 this.toggleActivePlayer();
                 this.toggleActiveMark();
+                this.dispatchEvent(new GameBoardChangeEvent(this.state));
             }
-
-            this.dispatchEvent(new GameBoardChangeEvent(this.state));
-
             this.renderer.render();
         });
 
@@ -182,6 +233,7 @@ export class GameBoardElement extends HTMLElementBase {
                     this.preProcessingStepsRunner(this.preProcessingActions.tieStateNextRoundClick);
                     this.dispatchEvent(new GameBoardChangeEvent(this.state));
                     this.renderer.render();
+                    this.newGameStarted$.next(true);
                 } else {
                     Router.router.navigateTo(Components.NEW_GAME);
                 }
@@ -192,6 +244,7 @@ export class GameBoardElement extends HTMLElementBase {
                     this.preProcessingStepsRunner(this.preProcessingActions.winnerStateNextRoundClick);
                     this.dispatchEvent(new GameBoardChangeEvent(this.state));
                     this.renderer.render();
+                    this.newGameStarted$.next(true);
                 } else {
                     Router.router.navigateTo(Components.NEW_GAME);
                 }

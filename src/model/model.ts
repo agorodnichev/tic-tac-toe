@@ -43,6 +43,7 @@ interface Dialog {
 
 export interface Winner {
     position: [number, number, number];
+    fullCellAddress: Array<{row: number, column: number}>;
 }
 
 export interface GameState {

@@ -55,17 +55,15 @@ export class Router {
 
     private setup() {
         window.addEventListener(PushStateEvent.type, (event: PushStateEvent) => {
-            const component = this.getComponentByPath(event.detail.url as string);
-            this.outletContainer.replaceChildren(
-                document.createElement(component)
-            );
+            const componentSelector = this.getComponentByPath(event.detail.url as string);
+            const component = document.createElement(componentSelector)
+            this.outletContainer.replaceChildren(component);
         });
 
         window.addEventListener('popstate', (event: PopStateEvent) => {
-            const component = this.getComponentByPath(window.location.pathname);
-            this.outletContainer.replaceChildren(
-                document.createElement(component)
-            );
+            const componentSelector = this.getComponentByPath(window.location.pathname);
+            const component = document.createElement(componentSelector)
+            this.outletContainer.replaceChildren(component);
         });
         const component = this.getComponentByPath(window.location.pathname);
         this.navigateTo(component);

@@ -32,10 +32,12 @@ class StoreBase<T> {
         return currentStoreState;
     }
 
-    protected select<K>(mapFn: (store: T) => K): Observable<K> {
+    select<K>(mapFn: (store: T) => K): Observable<K> {
         return this.store$.asObservable().pipe(
-            map((store: T) => mapFn(store)),
-            distinctUntilChanged(),
+            map((store: T) => {
+                return mapFn(store)
+            }),
+            // distinctUntilChanged(),
         );
     }
 

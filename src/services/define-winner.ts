@@ -24,7 +24,12 @@ export function defineWinner(gameBoardMatrix: Array<string[]>): Winner {
 
         if (item1 === item2 && item2 === item3 && !!item1) {
             return {
-                position
+                position,
+                fullCellAddress: [
+                    { row: itemAddress1.row, column: itemAddress1.column },
+                    { row: itemAddress2.row, column: itemAddress2.column },
+                    { row: itemAddress3.row, column: itemAddress3.column },
+                ]
             }
         }
     }
