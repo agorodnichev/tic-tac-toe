@@ -1,7 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
+const WorkboxPlugin = require('workbox-webpack-plugin');
 
 const nodeModulesPath = path.resolve(__dirname, 'node_modules');
 
@@ -12,6 +12,9 @@ module.exports = {
   },
   devtool: "inline-source-map",
   devServer: {
+    devMiddleware: {
+      writeToDisk: true,
+    },
     historyApiFallback: true,
     static: {
       directory: path.join(__dirname, "dist"),
@@ -85,6 +88,10 @@ module.exports = {
       template: "./src/index.html",
     }),
     new MiniCssExtractPlugin(),
+    new WorkboxPlugin.GenerateSW({
+      clientsClaim: true,
+      skipWaiting: true,
+    })
   ],
   output: {
     filename: "[name].[contenthash].js",
